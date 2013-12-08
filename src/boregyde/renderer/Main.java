@@ -5,6 +5,7 @@ import static org.lwjgl.input.Keyboard.*;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.util.ArrayList;
 
 import king.jaiden.RATL.MyWindow;
 
@@ -19,7 +20,8 @@ import org.newdawn.slick.opengl.TextureLoader;
 public class Main extends MyWindow {
 	public double[][] mountains;
 	public double[][][] colors;
-	public double rx = 0, ry = 0, zoom = 100, dx = 0, dy = 0, dz = 0;
+	public double rx = 0, ry = 0, zoom = 0, dx = 0, dy = 0, dz = 0;
+	ArrayList<DataPoint> dp;
 	
 	public Main(int w, int h, int fov, String title) {
 		super(w, h, fov, title);
@@ -36,6 +38,15 @@ public class Main extends MyWindow {
 		glFrontFace(GL_CW);
 		mountains  = new double[100][100];
 		colors  = new double[100][100][3];
+		dp = new ArrayList<DataPoint>();
+		
+		rx = 4;
+		ry = 21;
+		zoom = 0;
+		dx = 6.8;
+		dy = -10;
+		dz = -19.1;
+		
 		for(int row = 0; row < mountains.length; row++){
 			for(int col = 0; col < mountains[row].length; col++){
 				int r = row - 50;
@@ -53,6 +64,16 @@ public class Main extends MyWindow {
 
 	@Override
 	public void input() {
+		if(Mouse.next()){
+			if(Mouse.isButtonDown(0)){
+				System.out.println("rx:"+rx);
+				System.out.println("ry:"+ry);
+				System.out.println("zoom:"+zoom);
+				System.out.println("dx:"+dx);
+				System.out.println("dy:"+dy);
+				System.out.println("dz:"+dz);
+			}
+		}
 		if(Mouse.isButtonDown(1)){
 			ry += Mouse.getDX();
 			rx -= Mouse.getDY();
@@ -91,6 +112,14 @@ public class Main extends MyWindow {
 		glRotated(ry,0,1,0);
 		glTranslated(-50,0,-50);
 		glTranslated(dx,dy,dz);
+		drawStructures();
+	}
+	
+	/**
+	 * Draws the permanent structures (like mountains, grids, drills, etc)
+	 */
+	public void drawStructures(){
+		// Mountains
 		for(int i = 0; i < mountains.length-1; i++){
 			for(int n = 0; n<mountains[i].length-1;n++){
 				glBegin(GL_TRIANGLES);
@@ -111,6 +140,111 @@ public class Main extends MyWindow {
 				glEnd();
 			}
 		}
+		
+		// Drill
+		glPushMatrix();
+			glTranslated(50,0,50);
+			glColor3d(1,1,1);
+			// Y-Axis
+//			glBegin(GL_LINES);
+//				glVertex3d(0,0,0);
+//				glVertex3d(0,100,0);
+//			glEnd();
+			glBegin(GL_TRIANGLES);
+				// Front-right leg
+				glColor3d(.5,.5,.5);
+				glVertex3d(5,0,5);
+				glColor3d(.1,.1,.1);
+				glVertex3d(5,5,5);
+				glVertex3d(5,5,0);
+				glColor3d(.5,.5,.5);
+				glVertex3d(5,0,5);
+				glColor3d(.1,.1,.1);
+				glVertex3d(0,5,5);
+				glVertex3d(5,5,5);
+				// Front-left leg
+				glColor3d(.5,.5,.5);
+				glVertex3d(-5,0,5);
+				glColor3d(.1,.1,.1);
+				glVertex3d(-5,5,5);
+				glVertex3d(0,5,5);
+				glColor3d(.5,.5,.5);
+				glVertex3d(-5,0,5);
+				glColor3d(.1,.1,.1);
+				glVertex3d(-5,5,0);
+				glVertex3d(-5,5,5);
+				// Back-left leg
+				glColor3d(.5,.5,.5);
+				glVertex3d(-5,0,-5);
+				glColor3d(.1,.1,.1);
+				glVertex3d(-5,5,-5);
+				glVertex3d(-5,5,0);
+				glColor3d(.5,.5,.5);
+				glVertex3d(-5,0,-5);
+				glColor3d(.1,.1,.1);
+				glVertex3d(0,5,-5);
+				glVertex3d(-5,5,-5);
+				// Back-right leg
+				glColor3d(.5,.5,.5);
+				glVertex3d(5,0,-5);
+				glColor3d(.1,.1,.1);
+				glVertex3d(5,5,-5);
+				glVertex3d(0,5,-5);
+				glColor3d(.5,.5,.5);
+				glVertex3d(5,0,-5);
+				glColor3d(.1,.1,.1);
+				glVertex3d(5,5,0);
+				glVertex3d(5,5,-5);
+				// Back cover
+				glColor3d(.5,.5,.5);
+				glVertex3d(-5,5,-5);
+				glVertex3d(5,5,-5);
+				glColor3d(.1,.1,.1);
+				glVertex3d(0,7,0);
+				// Right cover
+				glColor3d(.5,.5,.5);
+				glVertex3d(5,5,-5);
+				glVertex3d(5,5,5);
+				glColor3d(.1,.1,.1);
+				glVertex3d(0,7,0);
+				// Front cover
+				glColor3d(.5,.5,.5);
+				glVertex3d(5,5,5);
+				glVertex3d(-5,5,5);
+				glColor3d(.1,.1,.1);
+				glVertex3d(0,7,0);
+				// Left cover
+				glColor3d(.5,.5,.5);
+				glVertex3d(-5,5,5);
+				glVertex3d(-5,5,-5);
+				glColor3d(.1,.1,.1);
+				glVertex3d(0,7,0);
+				// Back tower
+				glColor3d(.5,.5,.5);
+				glVertex3d(-3,3,-3);
+				glVertex3d(3,3,-3);
+				glColor3d(.1,.1,.1);
+				glVertex3d(0,30,0);
+				// Right tower
+				glColor3d(.5,.5,.5);
+				glVertex3d(3,3,-3);
+				glVertex3d(3,3,3);
+				glColor3d(.1,.1,.1);
+				glVertex3d(0,30,0);
+				// Front tower
+				glColor3d(.5,.5,.5);
+				glVertex3d(3,3,3);
+				glVertex3d(-3,3,3);
+				glColor3d(.1,.1,.1);
+				glVertex3d(0,30,0);
+				// Left tower
+				glColor3d(.5,.5,.5);
+				glVertex3d(-3,3,3);
+				glVertex3d(-3,3,-3);
+				glColor3d(.1,.1,.1);
+				glVertex3d(0,30,0);
+			glEnd();
+		glPopMatrix();
 	}
 	
 	public double r(){
