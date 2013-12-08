@@ -5,23 +5,24 @@ import static org.lwjgl.input.Keyboard.*;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 import king.jaiden.RATL.MyWindow;
 
-import org.lwjgl.LWJGLException;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
-import org.lwjgl.opengl.Display;
-import org.lwjgl.opengl.DisplayMode;
-import org.lwjgl.util.glu.GLU;
-import org.newdawn.slick.opengl.TextureLoader;
 
 public class Main extends MyWindow {
 	public double[][] mountains;
 	public double[][][] colors;
 	public double rx = 0, ry = 0, zoom = 0, dx = 0, dy = 0, dz = 0;
+	Scanner scanner;
+	File file;
 	ArrayList<DataPoint> dp;
+	int tbps = 0; //ticks between point swap
+	int currPoint = 0; //index of currently focused point
 	
 	public Main(int w, int h, int fov, String title) {
 		super(w, h, fov, title);
@@ -36,16 +37,56 @@ public class Main extends MyWindow {
 		glDisable(GL_CULL_FACE);
 //		glDisable(GL_DEPTH_TEST);
 		glFrontFace(GL_CW);
+		
 		mountains  = new double[100][100];
 		colors  = new double[100][100][3];
 		dp = new ArrayList<DataPoint>();
 		
-		rx = 4;
-		ry = 21;
-		zoom = 0;
-		dx = 6.8;
-		dy = -10;
-		dz = -19.1;
+		file = new File("res/data.txt");
+		try {
+			scanner = new Scanner(file);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+		
+		int i = 0;
+		while(scanner.hasNext()){
+			if(i==0){
+			dp.add(new DataPoint(scanner.nextDouble(),
+								 scanner.nextDouble(),
+								 scanner.nextDouble(),
+								 scanner.nextDouble(),
+								 scanner.nextDouble(),
+								 scanner.nextDouble(),
+								 scanner.nextDouble(),
+								 scanner.nextDouble(),
+								 scanner.nextDouble(),
+								 scanner.nextDouble(),
+								 null));
+			}else{
+				dp.add(new DataPoint(scanner.nextDouble(),
+						 scanner.nextDouble(),
+						 scanner.nextDouble(),
+						 scanner.nextDouble(),
+						 scanner.nextDouble(),
+						 scanner.nextDouble(),
+						 scanner.nextDouble(),
+						 scanner.nextDouble(),
+						 scanner.nextDouble(),
+						 scanner.nextDouble(),
+						 dp.get(i-1)));
+			}
+			i++;
+		}
+		
+		tbps = 20;
+//		rx = 4;			//Good setup for looking at drill tower
+//		ry = 21;
+//		zoom = 0;
+//		dx = 6.8;
+//		dy = -10;
+//		dz = -19.1;
 		
 		for(int row = 0; row < mountains.length; row++){
 			for(int col = 0; col < mountains[row].length; col++){
@@ -101,6 +142,15 @@ public class Main extends MyWindow {
 	@Override
 	public void tick() {
 		super.tick();
+		if(tick%tbps==0)
+			currPoint++;
+		
+		
+		DataPoint d = dp.get(currPoint%dp.size());
+		double[] coords = d.getCoords();
+		dx = -coords[0];
+		dy = -coords[1];
+		dz = -coords[2];
 	}
 
 	@Override
@@ -112,13 +162,12 @@ public class Main extends MyWindow {
 		glRotated(ry,0,1,0);
 		glTranslated(-50,0,-50);
 		glTranslated(dx,dy,dz);
-		drawStructures();
+		drawMountains();
+		drawDrill();
+		drawDataPoints();
 	}
 	
-	/**
-	 * Draws the permanent structures (like mountains, grids, drills, etc)
-	 */
-	public void drawStructures(){
+	public void drawMountains(){
 		// Mountains
 		for(int i = 0; i < mountains.length-1; i++){
 			for(int n = 0; n<mountains[i].length-1;n++){
@@ -141,15 +190,19 @@ public class Main extends MyWindow {
 			}
 		}
 		
+	}
+	
+	public void drawDrill(){
+
 		// Drill
 		glPushMatrix();
 			glTranslated(50,0,50);
-			glColor3d(1,1,1);
-			// Y-Axis
-//			glBegin(GL_LINES);
-//				glVertex3d(0,0,0);
-//				glVertex3d(0,100,0);
-//			glEnd();
+			glColor3d(.7,.7,.7);
+			//Y-Axis
+			glBegin(GL_LINES);
+				glVertex3d(0,-1000,0);
+				glVertex3d(0,1000,0);
+			glEnd();
 			glBegin(GL_TRIANGLES);
 				// Front-right leg
 				glColor3d(.5,.5,.5);
@@ -244,6 +297,14 @@ public class Main extends MyWindow {
 				glColor3d(.1,.1,.1);
 				glVertex3d(0,30,0);
 			glEnd();
+		glPopMatrix();
+	}
+	
+	public void drawDataPoints(){
+		glPushMatrix();
+		glTranslated(50,0,50);
+		for(DataPoint d: dp)
+			d.draw();
 		glPopMatrix();
 	}
 	
