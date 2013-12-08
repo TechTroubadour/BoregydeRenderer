@@ -1,6 +1,7 @@
 package boregyde.renderer;
 
 import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.input.Keyboard.*;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -8,6 +9,8 @@ import java.io.FileInputStream;
 import king.jaiden.RATL.MyWindow;
 
 import org.lwjgl.LWJGLException;
+import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
 import org.lwjgl.util.glu.GLU;
@@ -15,28 +18,63 @@ import org.newdawn.slick.opengl.TextureLoader;
 
 public class Main extends MyWindow {
 	public double[][] mountains;
+	public double[][][] colors;
+	public double rx = 0, ry = 0, zoom = 100, dx = 0, dy = 0, dz = 0;
 	
 	public Main(int w, int h, int fov, String title) {
 		super(w, h, fov, title);
 	}
 
 	public static void main(String[] args){
-		new Main(1600,900,70,"Boregyde Data Renderer");
+		new Main(1600,900,30,"Boregyde Data Renderer");
 	}
 	
 	@Override
 	public void init() {
+		glDisable(GL_CULL_FACE);
+//		glDisable(GL_DEPTH_TEST);
+		glFrontFace(GL_CW);
 		mountains  = new double[100][100];
-		for(int row = 0; row < 100; row++){
-			for(int col = 0; col < 100; col++){
-				mountains[row][col] = Math.random()*10;
+		colors  = new double[100][100][3];
+		for(int row = 0; row < mountains.length; row++){
+			for(int col = 0; col < mountains[row].length; col++){
+				int r = row - 50;
+				int c = col - 50;
+				mountains[row][col] = Math.random()+Math.pow(1.05,Math.sqrt(Math.pow(r,2)+Math.pow(c,2)));
+				
+				double colorSeed = r()/3+0.3333333;
+				
+				colors[row][col][0] = colorSeed;
+				colors[row][col][1] = colorSeed/1.94736842105263;
+				colors[row][col][2] = 0;
 			}
 		}
 	}
 
 	@Override
 	public void input() {
-		// TODO Auto-generated method stub
+		if(Mouse.isButtonDown(1)){
+			ry += Mouse.getDX();
+			rx -= Mouse.getDY();
+			if(rx<-90)
+				rx=-90;
+			else if(rx>90)
+				rx=90;
+		}
+		zoom -= Mouse.getDWheel()/100;
+		if(Keyboard.isKeyDown(KEY_W)){
+			dz+=0.1;
+		}if(Keyboard.isKeyDown(KEY_S)){
+			dz-=0.1;
+		}if(Keyboard.isKeyDown(KEY_A)){
+			dx+=0.1;
+		}if(Keyboard.isKeyDown(KEY_D)){
+			dx-=0.1;
+		}if(Keyboard.isKeyDown(KEY_Q)){
+			dy-=0.1;
+		}if(Keyboard.isKeyDown(KEY_E)){
+			dy+=0.1;
+		}
 	}
 
 	@Override
@@ -48,17 +86,35 @@ public class Main extends MyWindow {
 	public void draw() {
 		super.draw();
 		glLoadIdentity();
-		glTranslated(-10,-10,-100);
-		glColor3d(0.7,0.7,0.7);
-		for(int i = 0; i < 99; i++){
-			for(int n = 0; n<99;n++){
+		glTranslated(0,0,-zoom);
+		glRotated(rx,1,0,0);
+		glRotated(ry,0,1,0);
+		glTranslated(-50,0,-50);
+		glTranslated(dx,dy,dz);
+		for(int i = 0; i < mountains.length-1; i++){
+			for(int n = 0; n<mountains[i].length-1;n++){
 				glBegin(GL_TRIANGLES);
-					glVertex3d(i,n,mountains[i][n]);
-					glVertex3d(i+1,n,mountains[i][n]);
-					glVertex3d(i+1,n+1,mountains[i][n]);
+					glColor3d(colors[i][n][0],colors[i][n][1],colors[i][n][2]);
+					glVertex3d(i,mountains[i][n],n);
+					glColor3d(colors[i+1][n][0],colors[i+1][n][1],colors[i+1][n][2]);
+					glVertex3d(i+1,mountains[i+1][n],n);
+					glColor3d(colors[i+1][n+1][0],colors[i+1][n+1][1],colors[i+1][n+1][2]);
+					glVertex3d(i+1,mountains[i+1][n+1],n+1);
+				glEnd();
+				glBegin(GL_TRIANGLES);
+					glColor3d(colors[i+1][n+1][0],colors[i+1][n+1][1],colors[i+1][n+1][2]);
+					glVertex3d(i+1,mountains[i+1][n+1],n+1);
+					glColor3d(colors[i][n+1][0],colors[i][n+1][1],colors[i][n+1][2]);
+					glVertex3d(i,mountains[i][n+1],n+1);
+					glColor3d(colors[i][n][0],colors[i][n][1],colors[i][n][2]);
+					glVertex3d(i,mountains[i][n],n);
 				glEnd();
 			}
 		}
+	}
+	
+	public double r(){
+		return Math.random();
 	}
 
 }
