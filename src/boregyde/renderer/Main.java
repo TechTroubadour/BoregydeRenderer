@@ -3,6 +3,8 @@ package boregyde.renderer;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.input.Keyboard.*;
 
+import java.awt.Point;
+import java.awt.geom.Point2D;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -24,9 +26,11 @@ public class Main extends MyWindow {
 	Scanner scanner;
 	File file;
 	ArrayList<DataPoint> dp;
+	ArrayList<MyButton> butts;
 	int tbps = 0; //ticks between point swap
 	int currPoint = 0; //index of currently focused point
 	AlphaNumeric an;
+	int displayMode = 0;
 	
 	public Main(int w, int h, int fov, String title) {
 		super(w, h, fov, title);
@@ -45,6 +49,8 @@ public class Main extends MyWindow {
 		mountains  = new double[100][100];
 		colors  = new double[100][100][3];
 		dp = new ArrayList<DataPoint>();
+		butts = new ArrayList<MyButton>();
+		
 		try {
 			an = new AlphaNumeric();
 		} catch (Exception e) {
@@ -58,7 +64,11 @@ public class Main extends MyWindow {
 			e.printStackTrace();
 			System.exit(1);
 		}
-		
+
+		butts.add(new MyButton("1",200,10,10,20,an,this));
+		butts.add(new MyButton("2",220,10,10,20,an,this));
+		butts.add(new MyButton("3",240,10,10,20,an,this));
+		butts.add(new MyButton("4",260,10,10,20,an,this));
 		int i = 0;
 		while(scanner.hasNext()){
 			if(i==0){
@@ -114,16 +124,25 @@ public class Main extends MyWindow {
 
 	@Override
 	public void input() {
+		Point p = new Point(Mouse.getX(),Mouse.getY());
 		if(Mouse.next()){
 			if(Mouse.isButtonDown(0)){
-				System.out.println("rx:"+rx);
-				System.out.println("ry:"+ry);
-				System.out.println("zoom:"+zoom);
-				System.out.println("dx:"+dx);
-				System.out.println("dy:"+dy);
-				System.out.println("dz:"+dz);
+				for(MyButton b: butts){
+					if(b.getRectangle().contains(p)){
+						displayMode = Integer.parseInt(b.message);
+					}
+				}
+			}
+		}else{
+			for(MyButton b: butts){
+				if(b.getRectangle().contains(p)){
+					b.hover = true;
+				}else{
+					b.hover = false;
+				}
 			}
 		}
+		
 		if(Mouse.isButtonDown(1)){
 			ry += Mouse.getDX();
 			rx -= Mouse.getDY();
@@ -138,6 +157,8 @@ public class Main extends MyWindow {
 			}
 		}
 		zoom -= Mouse.getDWheel()/100;
+		if(zoom<0)
+			zoom = 0;
 		if(Keyboard.isKeyDown(KEY_W)){
 			dz+=0.1;
 		}if(Keyboard.isKeyDown(KEY_S)){
@@ -180,7 +201,6 @@ public class Main extends MyWindow {
 		drawDrill();
 		drawDataPoints();
 		drawHud();
-		setup3DMatrix();
 	}
 	
 	public void drawMountains(){
@@ -330,13 +350,17 @@ public class Main extends MyWindow {
 			glMatrixMode(GL_PROJECTION);
 			glLoadIdentity();
 			glPushMatrix();
-				glOrtho(-WINDOW_WIDTH/2, WINDOW_WIDTH/2, -WINDOW_HEIGHT/2, WINDOW_HEIGHT/2, 1, -1);
+				glOrtho(0, WINDOW_WIDTH, 0, WINDOW_HEIGHT, -1, 1);
 				glMatrixMode(GL_MODELVIEW);
 				glLoadIdentity();
 				glColor3d(1,1,1);
-				an.write("Hello World", 10, 20, 0, 10, 20);
+
+				an.write("Display mode: "+displayMode,10,10,0,10,20);
+				for(MyButton d: butts)
+					d.draw();
 			glPopMatrix();
 		glPopMatrix();
+		setup3DMatrix();
 	}
 	
 	public double r(){
