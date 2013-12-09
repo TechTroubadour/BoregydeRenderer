@@ -6,13 +6,16 @@ import static org.lwjgl.input.Keyboard.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
+import king.jaiden.RATL.AlphaNumeric;
 import king.jaiden.RATL.MyWindow;
 
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
+import org.lwjgl.util.glu.GLU;
 
 public class Main extends MyWindow {
 	public double[][] mountains;
@@ -23,6 +26,7 @@ public class Main extends MyWindow {
 	ArrayList<DataPoint> dp;
 	int tbps = 0; //ticks between point swap
 	int currPoint = 0; //index of currently focused point
+	AlphaNumeric an;
 	
 	public Main(int w, int h, int fov, String title) {
 		super(w, h, fov, title);
@@ -41,7 +45,12 @@ public class Main extends MyWindow {
 		mountains  = new double[100][100];
 		colors  = new double[100][100][3];
 		dp = new ArrayList<DataPoint>();
-		
+		try {
+			an = new AlphaNumeric();
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
 		file = new File("res/data.txt");
 		try {
 			scanner = new Scanner(file);
@@ -122,6 +131,11 @@ public class Main extends MyWindow {
 				rx=-90;
 			else if(rx>90)
 				rx=90;
+			if(rx>=0){
+				glEnable(GL_CULL_FACE);
+			}else{
+				glDisable(GL_CULL_FACE);
+			}
 		}
 		zoom -= Mouse.getDWheel()/100;
 		if(Keyboard.isKeyDown(KEY_W)){
@@ -165,6 +179,8 @@ public class Main extends MyWindow {
 		drawMountains();
 		drawDrill();
 		drawDataPoints();
+		drawHud();
+		setup3DMatrix();
 	}
 	
 	public void drawMountains(){
@@ -305,6 +321,21 @@ public class Main extends MyWindow {
 		glTranslated(50,0,50);
 		for(DataPoint d: dp)
 			d.draw();
+		glPopMatrix();
+	}
+	
+	public void drawHud(){
+		glPushMatrix();
+			// Setup the Matrix
+			glMatrixMode(GL_PROJECTION);
+			glLoadIdentity();
+			glPushMatrix();
+				glOrtho(-WINDOW_WIDTH/2, WINDOW_WIDTH/2, -WINDOW_HEIGHT/2, WINDOW_HEIGHT/2, 1, -1);
+				glMatrixMode(GL_MODELVIEW);
+				glLoadIdentity();
+				glColor3d(1,1,1);
+				an.write("Hello World", 10, 20, 0, 10, 20);
+			glPopMatrix();
 		glPopMatrix();
 	}
 	

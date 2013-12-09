@@ -85,6 +85,14 @@ public class DataPoint {
 				glVertex3d(x+ds,y,z-ds);
 			glEnd();
 		}
+		glColor4d(0,doglegSeverity,1/(doglegSeverity*5),0.1);
+		int cakeSize = 1000;
+		glBegin(GL_QUADS);
+			glVertex3d(x+cakeSize,y,z-cakeSize);
+			glVertex3d(x-cakeSize,y,z-cakeSize);
+			glVertex3d(x-cakeSize,y,z+cakeSize);
+			glVertex3d(x+cakeSize,y,z+cakeSize);
+		glEnd();
 	}
 	public double[] getCoords(){
 		double[] array = {x,y,z};
