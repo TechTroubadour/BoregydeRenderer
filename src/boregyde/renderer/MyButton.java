@@ -13,12 +13,16 @@ public class MyButton {
 	AlphaNumeric an;
 	String message;
 	Main m;
+	int id = 0;
+	int value = 0;
 	
-	public MyButton(String message, int x, int y, int width, int height, AlphaNumeric a, Main m)	{
+	public MyButton(int id, int val, String message, int x, int y, int width, int height, AlphaNumeric a, Main m)	{
 		bb = new Rectangle(x,y,width,height);
 		an = a;
 		this.message = message;
 		this.m = m;
+		this.id = id;
+		value = val;
 	}
 	public void draw(){
 		if(hover){

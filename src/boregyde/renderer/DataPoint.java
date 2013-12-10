@@ -45,7 +45,7 @@ public class DataPoint {
 		this.previousPoint = previousPoint;
 		System.out.println("("+x+","+y+","+z+")");
 	}
-	public void draw(){		
+	public void draw(boolean cake){		
 		double ds = doglegSeverity*5;
 		if(previousPoint==null){
 			glColor3d(1,1,1);
@@ -85,14 +85,18 @@ public class DataPoint {
 				glVertex3d(x+ds,y,z-ds);
 			glEnd();
 		}
-		glColor4d(0,doglegSeverity,1/(doglegSeverity*5),0.1);
-		int cakeSize = 1000;
-		glBegin(GL_QUADS);
-			glVertex3d(x+cakeSize,y,z-cakeSize);
-			glVertex3d(x-cakeSize,y,z-cakeSize);
-			glVertex3d(x-cakeSize,y,z+cakeSize);
-			glVertex3d(x+cakeSize,y,z+cakeSize);
-		glEnd();
+		if(cake){
+			glDisable(GL_DEPTH_TEST);
+			glColor4d(0,doglegSeverity,1/(doglegSeverity*5),0.1);
+			int cakeSize = 1000;
+			glBegin(GL_QUADS);
+				glVertex3d(x+cakeSize,y,z-cakeSize);
+				glVertex3d(x-cakeSize,y,z-cakeSize);
+				glVertex3d(x-cakeSize,y,z+cakeSize);
+				glVertex3d(x+cakeSize,y,z+cakeSize);
+			glEnd();
+			glEnable(GL_DEPTH_TEST);
+		}
 	}
 	public double[] getCoords(){
 		double[] array = {x,y,z};

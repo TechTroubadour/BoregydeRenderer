@@ -31,6 +31,9 @@ public class Main extends MyWindow {
 	int currPoint = 0; //index of currently focused point
 	AlphaNumeric an;
 	int displayMode = 0;
+	int movementMode = 0;
+	String movementModeMessage = "";
+	double cameraRotate = 0;
 	
 	public Main(int w, int h, int fov, String title) {
 		super(w, h, fov, title);
@@ -50,6 +53,10 @@ public class Main extends MyWindow {
 		colors  = new double[100][100][3];
 		dp = new ArrayList<DataPoint>();
 		butts = new ArrayList<MyButton>();
+		displayMode = 1;
+		movementModeMessage="Descending";
+		zoom = 100;
+		cameraRotate = 0;
 		
 		try {
 			an = new AlphaNumeric();
@@ -65,10 +72,14 @@ public class Main extends MyWindow {
 			System.exit(1);
 		}
 
-		butts.add(new MyButton("1",200,10,10,20,an,this));
-		butts.add(new MyButton("2",220,10,10,20,an,this));
-		butts.add(new MyButton("3",240,10,10,20,an,this));
-		butts.add(new MyButton("4",260,10,10,20,an,this));
+		butts.add(new MyButton(0,0,"1",200,10,10,20,an,this));
+		butts.add(new MyButton(0,0,"2",220,10,10,20,an,this));
+		butts.add(new MyButton(0,0,"3",240,10,10,20,an,this));
+		butts.add(new MyButton(0,0,"4",260,10,10,20,an,this));
+		butts.add(new MyButton(1,0,"Descending",250,40,100,20,an,this));
+		butts.add(new MyButton(1,1,"Drill",360,40,50,20,an,this));
+		butts.add(new MyButton(1,2,"+Rotate",420,40,70,20,an,this));
+		butts.add(new MyButton(1,3,"-Rotate",500,40,70,20,an,this));
 		int i = 0;
 		while(scanner.hasNext()){
 			if(i==0){
@@ -100,12 +111,6 @@ public class Main extends MyWindow {
 		}
 		
 		tbps = 20;
-//		rx = 4;			//Good setup for looking at drill tower
-//		ry = 21;
-//		zoom = 0;
-//		dx = 6.8;
-//		dy = -10;
-//		dz = -19.1;
 		
 		for(int row = 0; row < mountains.length; row++){
 			for(int col = 0; col < mountains[row].length; col++){
@@ -129,7 +134,7 @@ public class Main extends MyWindow {
 			if(Mouse.isButtonDown(0)){
 				for(MyButton b: butts){
 					if(b.getRectangle().contains(p)){
-						displayMode = Integer.parseInt(b.message);
+						click(b);
 					}
 				}
 			}
@@ -174,18 +179,50 @@ public class Main extends MyWindow {
 		}
 	}
 
+	public void click(MyButton b){
+		switch(b.id){
+		case 0:
+			displayMode = Integer.parseInt(b.message);
+			break;
+		case 1:
+			movementModeMessage = b.message;
+			switch(b.value){
+			case 0:
+				movementMode = b.value;
+				break;
+			case 1:
+				movementMode = b.value;
+				rx = 30;			//Good setup for looking at drill tower
+				ry = 20;
+				zoom = 40;
+				dx = 0;
+				dy = 0;
+				dz = 0;
+				break;
+			case 2:
+				cameraRotate += 0.5;
+				break;
+			case 3:
+				cameraRotate -= 0.5;
+				break;
+			}
+			break;
+		}
+	}
+	
 	@Override
 	public void tick() {
 		super.tick();
-		if(tick%tbps==0)
-			currPoint++;
-		
-		
-		DataPoint d = dp.get(currPoint%dp.size());
-		double[] coords = d.getCoords();
-		dx = -coords[0];
-		dy = -coords[1];
-		dz = -coords[2];
+		if(movementMode==0){
+			if(tick%tbps==0)
+				currPoint++;
+			DataPoint d = dp.get(currPoint%dp.size());
+			double[] coords = d.getCoords();
+			dx = -coords[0];
+			dy = -coords[1];
+			dz = -coords[2];
+		}
+		ry += cameraRotate;
 	}
 
 	@Override
@@ -197,9 +234,23 @@ public class Main extends MyWindow {
 		glRotated(ry,0,1,0);
 		glTranslated(-50,0,-50);
 		glTranslated(dx,dy,dz);
-		drawMountains();
-		drawDrill();
-		drawDataPoints();
+		switch(displayMode){
+		case 1:
+			drawMountains();
+			drawDrill();
+			drawDataPoints(true);
+			break;
+		case 2:
+			drawDrill();
+			drawDataPoints(true);
+			break;
+		case 3:
+			drawDataPoints(true);
+			break;
+		case 4:
+			drawDataPoints(false);
+			break;
+		}
 		drawHud();
 	}
 	
@@ -234,11 +285,11 @@ public class Main extends MyWindow {
 		glPushMatrix();
 			glTranslated(50,0,50);
 			glColor3d(.7,.7,.7);
-			//Y-Axis
-			glBegin(GL_LINES);
-				glVertex3d(0,-1000,0);
-				glVertex3d(0,1000,0);
-			glEnd();
+//			//Y-Axis
+//			glBegin(GL_LINES);
+//				glVertex3d(0,-1000,0);
+//				glVertex3d(0,1000,0);
+//			glEnd();
 			glBegin(GL_TRIANGLES);
 				// Front-right leg
 				glColor3d(.5,.5,.5);
@@ -336,11 +387,11 @@ public class Main extends MyWindow {
 		glPopMatrix();
 	}
 	
-	public void drawDataPoints(){
+	public void drawDataPoints(boolean x){
 		glPushMatrix();
 		glTranslated(50,0,50);
 		for(DataPoint d: dp)
-			d.draw();
+			d.draw(x);
 		glPopMatrix();
 	}
 	
@@ -353,11 +404,24 @@ public class Main extends MyWindow {
 				glOrtho(0, WINDOW_WIDTH, 0, WINDOW_HEIGHT, -1, 1);
 				glMatrixMode(GL_MODELVIEW);
 				glLoadIdentity();
+				
 				glColor3d(1,1,1);
-
 				an.write("Display mode: "+displayMode,10,10,0,10,20);
-				for(MyButton d: butts)
-					d.draw();
+				butts.get(0).draw();
+				butts.get(1).draw();
+				butts.get(2).draw();
+				butts.get(3).draw();
+				
+				glColor3d(1,1,1);
+				an.write("Camera: "+movementModeMessage,10,40,0,10,20);
+				butts.get(4).draw();
+				butts.get(5).draw();
+				butts.get(6).draw();
+				butts.get(7).draw();
+				
+				glDisable(GL_TEXTURE_2D);
+				
+				
 			glPopMatrix();
 		glPopMatrix();
 		setup3DMatrix();
